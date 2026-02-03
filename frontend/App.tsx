@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { EditorView } from './components/EditorView';
 import { DashboardView } from './components/DashboardView';
+import { MobileWarning } from './components/MobileWarning';
 import { AnalysisResult, StoredFileNode } from './types';
 import { analyzeCodeWithGemini } from './services/geminiService';
 import {
@@ -27,6 +28,24 @@ const App: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    // Initialize with correct mobile state to prevent flash
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 1024 || 
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  });
+
+  // Update mobile state on resize
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobileDevice = window.innerWidth < 1024 || 
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Load files from localStorage on mount
   useEffect(() => {
@@ -183,6 +202,11 @@ const App: React.FC = () => {
       handleAnalyze(activeFile.content, true);
     }
   };
+
+  // Show mobile warning if on mobile device
+  if (isMobile) {
+    return <MobileWarning />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-200 font-sans flex flex-col">

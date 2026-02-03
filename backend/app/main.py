@@ -62,7 +62,6 @@ async def root():
     return {
         "name": "Codalyzer API",
         "version": __version__,
-        "model": settings.GEMINI_MODEL,
         "status": "ok" if gemini_provider.is_available() else "unavailable",
     }
 

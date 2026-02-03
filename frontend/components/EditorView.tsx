@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Highlight, themes } from 'prism-react-renderer';
 import { FileNode, StoredFileNode } from '../types';
 import { StoredFile } from '../services/storageService';
+import { VERSION } from '../constants';
 import { 
   FileCode, Plus, Upload, Trash2, Box, Loader2, Zap, ChevronDown,
   FileJson, FileType, Braces, Hash, Coffee, Gem, Code2, Terminal, Eye, FolderOpen, Layout
@@ -229,7 +230,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
           <div className="bg-blue-600 p-1 rounded-md shadow-lg shadow-blue-900/50">
             <Layout size={16} className="text-white" />
           </div>
-          <span className="font-bold text-base tracking-tight text-white">Codalyzer <span className="text-blue-500 text-[10px] font-mono font-normal ml-0.5 opacity-70">// v2.5</span></span>
+          <span className="font-bold text-base tracking-tight text-white">Codalyzer <span className="text-blue-500 text-[10px] font-mono font-normal ml-0.5 opacity-70">// v{VERSION}</span></span>
         </div>
 
         <div className="p-4 border-b border-slate-800">

@@ -3,8 +3,8 @@ import { AnalysisResult } from '../types';
 import { getShare, ApiError } from '../services/apiService';
 import { DashboardView } from './DashboardView';
 import { useTheme } from '../hooks/useTheme';
-import { Loader2, AlertTriangle, Layout, ArrowRight } from 'lucide-react';
-import { VERSION } from '../constants';
+import { Loader2, AlertTriangle, ArrowRight } from 'lucide-react';
+
 
 interface SharedViewProps {
   shareId: string;
@@ -71,7 +71,7 @@ export const SharedView: React.FC<SharedViewProps> = ({ shareId, onGoHome }) => 
     <DashboardView
       result={result}
       onNewAnalysis={onGoHome}
-      onReanalyze={() => {}}
+      onReanalyze={() => { }}
       isReanalyzing={false}
     />
   );

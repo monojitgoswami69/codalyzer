@@ -4,13 +4,12 @@ import { ModernMonacoEditor } from './ModernMonacoEditor';
 
 import { StoredFile } from '../services/storageService';
 import { useTheme } from '../hooks/useTheme';
-import { PRISM_LANGUAGE_MAP, VERSION } from '../constants';
-import { detectLanguage } from '../utils/detectLanguage';
+import { VERSION } from '../constants';
+import { detectLanguage, detectLanguageAsync } from '../utils/detectLanguage';
 import { RateLimitInfo } from '../types';
 import {
   FileCode, Plus, Upload, Trash2, Loader2, Zap, Code2, Eye,
   FolderOpen, Sun, Moon, ArrowLeft, Clock,
-  AlertTriangle
 } from 'lucide-react';
 import {
   JavaScript,
@@ -84,7 +83,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
 
   const [cursorPosition, setCursorPosition] = useState({ ln: 1, col: 1 });
   const [selectionCount, setSelectionCount] = useState(0);
-  const [fontSize, setFontSize] = useState(() => {
+  const [fontSize] = useState(() => {
     const saved = localStorage.getItem('editor-font-size');
     return saved ? parseInt(saved, 10) : 16;
   });
@@ -104,11 +103,31 @@ export const EditorView: React.FC<EditorViewProps> = ({
     return detectLanguage(activeFile.name, activeFile.content);
   }, [activeFile?.name, activeFile?.content]);
 
+  // Sync heuristic for immediate display
   useEffect(() => {
     if (activeFile && !activeFile.language && detectedLanguage) {
       onLanguageChange(activeFile.id, detectedLanguage);
     }
   }, [detectedLanguage, activeFile, onLanguageChange]);
+
+  // Async AI refinement with Magika (debounced)
+  useEffect(() => {
+    if (!activeFile || !activeFile.content || activeFile.content.trim().length < 10) return;
+    // Skip if extension already resolved the language
+    if (activeFile.name.includes('.')) {
+      const ext = activeFile.name.split('.').pop()?.toLowerCase();
+      if (ext) return; // extension-based is authoritative
+    }
+    const timer = setTimeout(() => {
+      const fileId = activeFile.id;
+      detectLanguageAsync(activeFile.name, activeFile.content).then(aiLang => {
+        if (aiLang && aiLang !== activeFile.language) {
+          onLanguageChange(fileId, aiLang);
+        }
+      });
+    }, 500); // 500ms debounce
+    return () => clearTimeout(timer);
+  }, [activeFile?.id, activeFile?.content, activeFile?.name, activeFile?.language, onLanguageChange]);
 
   useEffect(() => {
     localStorage.setItem('editor-font-size', fontSize.toString());
@@ -229,7 +248,6 @@ export const EditorView: React.FC<EditorViewProps> = ({
                 onCursorChange={(ln, col) => setCursorPosition({ ln, col })}
                 onSelectionChange={(count) => setSelectionCount(count)}
                 onAnalyze={(code) => onAnalyze(code)}
-                isAnalyzing={isAnalyzing}
               />
             </div>
           )}

@@ -1,7 +1,7 @@
 // ─── Storage Service ────────────────────────────────────────────────────
 // Handles localStorage persistence for files, reports, history, and preferences.
 
-import { FileNode, AnalysisResult, HistoryEntry, Theme } from '../types';
+import { FileNode, AnalysisResult, HistoryEntry, RateLimitInfo, Theme } from '../types';
 
 const KEYS = {
   FILES: 'codalyzer-v2-files',
@@ -143,17 +143,17 @@ export function setStoredTheme(theme: Theme): void {
   localStorage.setItem(KEYS.THEME, theme);
 }
 
-export function getStoredRateLimit(): any {
+export function getStoredRateLimit(): RateLimitInfo | null {
   try {
     const raw = sessionStorage.getItem(KEYS.RATE_LIMIT);
-    return raw ? JSON.parse(raw) : null;
+    return raw ? JSON.parse(raw) as RateLimitInfo : null;
   } catch {
     return null;
   }
 }
 
-export function setStoredRateLimit(info: any): void {
-  const current = getStoredRateLimit() || {};
+export function setStoredRateLimit(info: Partial<RateLimitInfo>): void {
+  const current = getStoredRateLimit();
   const updated = { ...current, ...info };
   sessionStorage.setItem(KEYS.RATE_LIMIT, JSON.stringify(updated));
 }

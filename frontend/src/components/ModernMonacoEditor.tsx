@@ -11,7 +11,6 @@ interface ModernMonacoEditorProps {
     onCursorChange: (ln: number, col: number) => void;
     onSelectionChange: (count: number) => void;
     onAnalyze: (code: string) => void;
-    isAnalyzing: boolean;
 }
 
 // Map common language names to Monaco/Shiki language IDs
@@ -39,13 +38,23 @@ export const ModernMonacoEditor: React.FC<ModernMonacoEditorProps> = ({
     onCursorChange,
     onSelectionChange,
     onAnalyze,
-    isAnalyzing
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<any>(null); // monaco.editor.IStandaloneCodeEditor
     const monacoRef = useRef<any>(null); // monaco instance
     const [isReady, setIsReady] = useState(false);
     const isUpdatingRef = useRef(false);
+
+    // Store callbacks in refs to avoid stale closures in Monaco event handlers
+    const onChangeRef = useRef(onChange);
+    const onCursorChangeRef = useRef(onCursorChange);
+    const onSelectionChangeRef = useRef(onSelectionChange);
+    const onAnalyzeRef = useRef(onAnalyze);
+
+    useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
+    useEffect(() => { onCursorChangeRef.current = onCursorChange; }, [onCursorChange]);
+    useEffect(() => { onSelectionChangeRef.current = onSelectionChange; }, [onSelectionChange]);
+    useEffect(() => { onAnalyzeRef.current = onAnalyze; }, [onAnalyze]);
 
     // Initialize Monaco
     useEffect(() => {
@@ -87,25 +96,25 @@ export const ModernMonacoEditor: React.FC<ModernMonacoEditorProps> = ({
                         model: null,
                         theme: theme === 'dark' ? 'catppuccin-mocha' : 'catppuccin-latte',
                         bracketPairColorization: { enabled: true },
-                        renderLineHighlight: 'all',
+                        renderLineHighlight: 'line',
                         contextmenu: true,
                     });
 
                     editorRef.current = editor;
 
-                    // Event Listeners
+                    // Event Listeners — use refs to avoid stale closures
                     editor.onDidChangeCursorPosition((e: any) => {
-                        onCursorChange(e.position.lineNumber, e.position.column);
+                        onCursorChangeRef.current(e.position.lineNumber, e.position.column);
                     });
 
                     // Handle selection changes
-                    editor.onDidChangeCursorSelection((e: any) => {
+                    editor.onDidChangeCursorSelection(() => {
                         const selection = editor.getSelection();
                         if (selection) {
                             const model = editor.getModel();
                             if (model) {
                                 const selectedText = model.getValueInRange(selection);
-                                onSelectionChange(selectedText.length);
+                                onSelectionChangeRef.current(selectedText.length);
                             }
                         }
                     });
@@ -114,7 +123,7 @@ export const ModernMonacoEditor: React.FC<ModernMonacoEditorProps> = ({
                     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
                         const code = editor.getValue();
                         if (code.trim()) {
-                            onAnalyze(code);
+                            onAnalyzeRef.current(code);
                         }
                     });
 
@@ -126,7 +135,7 @@ export const ModernMonacoEditor: React.FC<ModernMonacoEditorProps> = ({
                         const model = editor.getModel();
                         if (model) {
                             const value = model.getValue();
-                            onChange(value);
+                            onChangeRef.current(value);
                         }
                     });
                 }
@@ -141,10 +150,15 @@ export const ModernMonacoEditor: React.FC<ModernMonacoEditorProps> = ({
 
         return () => {
             mounted = false;
-            // Cleanup: Dispose editor logic if needed
+            // Cleanup: Dispose editor and all models
             if (editorRef.current) {
                 editorRef.current.dispose();
                 editorRef.current = null;
+            }
+            if (monacoRef.current) {
+                // Dispose all models to prevent memory leaks
+                monacoRef.current.editor.getModels().forEach((model: any) => model.dispose());
+                monacoRef.current = null;
             }
         };
     }, []);

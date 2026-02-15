@@ -14,7 +14,8 @@ import {
   computeContentHash, StoredFile, getHistory, addHistoryEntry, clearHistory,
   getStoredRateLimit,
 } from './services/storageService';
-import { detectLanguage } from './utils/detectLanguage';
+import { detectLanguage, detectLanguageAsync } from './utils/detectLanguage';
+import { warmUpMagika } from './services/magikaService';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 // ─── Detect share param ─────────────────────────────────────────────────
@@ -22,7 +23,11 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 function getShareIdFromURL(): string | null {
   if (typeof window === 'undefined') return null;
   const params = new URLSearchParams(window.location.search);
-  return params.get('share');
+  const raw = params.get('share');
+  if (!raw) return null;
+  // Validate: only allow alphanumeric, hyphens, underscores (max 64 chars)
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(raw)) return null;
+  return raw;
 }
 
 // ─── App ────────────────────────────────────────────────────────────────
@@ -79,6 +84,9 @@ export const App: React.FC = () => {
     }
     setIsInitialized(true);
 
+    // Pre-warm Magika AI model so it's ready by the time user pastes code
+    warmUpMagika();
+
     // Sync with storage immediately
     const storedRL = getStoredRateLimit();
     if (storedRL) setRateLimit(storedRL);
@@ -128,16 +136,30 @@ export const App: React.FC = () => {
 
   const handleFileUpload = useCallback(async (file: File) => {
     const text = await file.text();
+    const fileId = Date.now().toString();
+    // Immediately use sync heuristic for instant UI feedback
+    const syncLanguage = detectLanguage(file.name, text);
     const newFile: StoredFile = {
-      id: Date.now().toString(),
+      id: fileId,
       name: file.name,
       content: text,
-      language: detectLanguage(file.name, text),
+      language: syncLanguage,
       contentHash: computeContentHash(text),
       lastModified: Date.now(),
     };
     setFiles(prev => [...prev, newFile]);
-    setActiveFileId(newFile.id);
+    setActiveFileId(fileId);
+
+    // Refine with Magika AI in the background (if extension didn't already resolve)
+    if (!syncLanguage || !file.name.includes('.')) {
+      detectLanguageAsync(file.name, text).then(aiLanguage => {
+        if (aiLanguage && aiLanguage !== syncLanguage) {
+          setFiles(prev => prev.map(f =>
+            f.id === fileId ? { ...f, language: aiLanguage, lastModified: Date.now() } : f
+          ));
+        }
+      });
+    }
   }, []);
 
   const handleFileDelete = useCallback((id: string) => {
@@ -194,7 +216,7 @@ export const App: React.FC = () => {
         // Use the backend-provided filename if it's better than what we have
         if (result.fileName && result.fileName !== activeFile.name) {
           updates.name = result.fileName;
-          // Re-detect language based on the new filename to ensure consistent TitleCase
+          // Sync heuristic first, then refine with Magika AI
           updates.language = detectLanguage(result.fileName, code);
         } else if (result.language && !activeFile.language) {
           // If name didn't change but we were missing language, use normalized backend language
@@ -206,12 +228,23 @@ export const App: React.FC = () => {
             f.id === activeFileId ? { ...f, ...updates, lastModified: Date.now() } : f
           ));
         }
+
+        // Refine language with Magika AI asynchronously
+        const fileIdForAI = activeFileId;
+        const fileNameForAI = updates.name || activeFile.name;
+        detectLanguageAsync(fileNameForAI, code).then(aiLanguage => {
+          if (aiLanguage) {
+            setFiles(prev => prev.map(f =>
+              f.id === fileIdForAI ? { ...f, language: aiLanguage, lastModified: Date.now() } : f
+            ));
+          }
+        });
       }
 
       saveReport(activeFile.id, activeFile.contentHash, result);
 
       // Add to history
-      const entry = addHistoryEntry(result);
+      addHistoryEntry(result);
       setHistory(getHistory());
 
       setAnalysisResult(result);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, Sun, Moon, Github } from 'lucide-react';
-import { VERSION } from '../constants';
+
 import { useTheme } from '../hooks/useTheme';
 
 interface LandingPageProps {

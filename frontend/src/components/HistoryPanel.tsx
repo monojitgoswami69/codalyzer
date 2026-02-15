@@ -1,7 +1,7 @@
 import React from 'react';
 import { HistoryEntry } from '../types';
 import { useTheme } from '../hooks/useTheme';
-import { Clock, Trash2, X, FileCode } from 'lucide-react';
+import { Clock, X, FileCode } from 'lucide-react';
 
 interface HistoryPanelProps {
   history: HistoryEntry[];

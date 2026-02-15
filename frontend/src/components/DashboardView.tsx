@@ -4,12 +4,12 @@ import { useTheme } from '../hooks/useTheme';
 import { exportPDF } from '../utils/exportPdf';
 import { createShare, ApiError } from '../services/apiService';
 import {
-  Share2, Download, AlertTriangle, CheckCircle, Info, Cpu,
-  AlertOctagon, Layers, ArrowUpRight, RefreshCw, Loader2,
-  ArrowLeft, Sun, Moon, Layout, Copy, Check, ExternalLink, Github,
+  Share2, Download, AlertTriangle, CheckCircle, Cpu,
+  AlertOctagon, ArrowUpRight, RefreshCw, Loader2,
+  ArrowLeft, Sun, Moon, Copy, Check, Github,
 } from 'lucide-react';
 import {
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Legend, ReferenceLine, ReferenceDot,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceDot,
 } from 'recharts';
 import { VERSION, PRISM_LANGUAGE_MAP } from '../constants';
 import { Highlight, themes } from 'prism-react-renderer';
@@ -66,7 +66,7 @@ function MetricCard({ title, value, rating, description, icon, isDark, className
     [ComplexityRating.Poor]: { text: 'text-rose-500', bar: 'bg-rose-500', darkBg: 'border-rose-800/30', lightBg: 'border-rose-200' },
   };
   const c = colors[rating];
-  const barWidth = rating === 'Good' ? '40%' : rating === 'Fair' ? '70%' : '100%';
+
 
   return (
     <div className={`rounded-xl p-4 border transition-colors flex flex-col ${isDark ? `bg-[#111828] ${c.darkBg}` : `bg-white ${c.lightBg}`} ${className}`}>
@@ -150,7 +150,7 @@ function IssueCard({ issue, isDark, sourceCode, language }: { issue: Issue; isDa
           <h5 className="text-[14px] font-black uppercase tracking-[0.2em] text-rose-500/70 mb-3 space-font">DETECTION</h5>
           <div className="flex-1 overflow-hidden">
             <Highlight theme={isDark ? themes.vsDark : themes.vsLight} code={snippetValue} language={prismLang}>
-              {({ className, style, tokens, getLineProps, getTokenProps }) => (
+              {({ className, tokens, getLineProps, getTokenProps }) => (
                 <pre className={`${className} bg-transparent p-0 m-0 text-[14px] font-mono leading-relaxed whitespace-pre-wrap break-words`} style={{ backgroundColor: 'transparent' }}>
                   {tokens.map((line, i) => {
                     const lineNo = hasLines ? contextStart + i + 1 : i + 1;
@@ -177,7 +177,7 @@ function IssueCard({ issue, isDark, sourceCode, language }: { issue: Issue; isDa
           <h5 className="text-[14px] font-black uppercase tracking-[0.2em] text-emerald-500/70 mb-3 space-font">SUGGESTED FIX</h5>
           <div className="flex-1 overflow-hidden">
             <Highlight theme={isDark ? themes.vsDark : themes.vsLight} code={issue.fix || '// No suggested fix available'} language={prismLang}>
-              {({ className, style, tokens, getLineProps, getTokenProps }) => (
+              {({ className, tokens, getLineProps, getTokenProps }) => (
                 <pre className={`${className} bg-transparent p-0 m-0 text-[14px] font-mono leading-relaxed whitespace-pre-wrap break-words`} style={{ backgroundColor: 'transparent' }}>
                   {tokens.map((line, i) => (
                     <div key={i} {...getLineProps({ line, key: i })} className="flex items-start">

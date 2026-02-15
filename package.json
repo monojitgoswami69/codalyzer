@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@catppuccin/vscode": "^3.18.1"
+  }
+}

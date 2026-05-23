@@ -6,211 +6,105 @@ An intelligent code complexity analysis tool powered by Google Gemini AI that pr
 
 Codalyzer is a professional development tool designed to help developers understand and optimize their code's performance characteristics. It leverages advanced AI models to analyze source code and provide detailed complexity metrics, performance visualizations, and actionable optimization suggestions.
 
+Recently rewritten into a cohesive **unified full-stack application** powered by Next.js.
+
 ### Key Features
 
 - **Multi-language Support**: JavaScript, TypeScript, Python, C++, C, Java, Go, Rust, Ruby, and PHP
 - **Comprehensive Analysis**: Best, average, and worst-case time complexity evaluation
 - **Space Complexity Assessment**: Memory usage analysis with detailed breakdowns
-- **Interactive Visualizations**: Real-time performance curves with mathematical precision
+- **Interactive Visualizations**: Real-time performance curves with math precision using Recharts
 - **Code Quality Insights**: Automated detection of optimization opportunities
 - **Smart File Management**: Automatic language detection and intelligent file naming
+- **Code Sharing**: Ephemeral sharing of code snippets via Upstash Redis
 - **Professional Reports**: Export-ready PDF reports with detailed analysis
 - **Real-time Processing**: Live syntax highlighting with IDE-like experience
 
 ## Architecture
 
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite for optimized development and production builds
-- **UI Components**: Custom component library with Tailwind CSS
-- **Syntax Highlighting**: Prism.js with Night Owl theme
-- **Charts**: Recharts for performance visualization
-- **Icons**: Lucide React for consistent iconography
-
-### Backend
-- **Framework**: FastAPI with Python 3.8+
-- **AI Model**: Google Gemini 2.5 Flash Lite
-- **API Design**: RESTful endpoints with comprehensive error handling
-- **Validation**: Pydantic models for type safety
-- **Configuration**: Environment-based settings management
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS & PostCSS
+- **State Management**: React 19 natively
+- **AI Model**: Google GenAI SDK (Gemini)
+- **Editor**: Monaco Editor (`@monaco-editor/react`)
+- **Data Store**: Upstash Redis (for saving ephemeral shares & rate limiting)
+- **Validation**: Zod for type-safe API boundaries
 
 ## Installation
 
 ### Prerequisites
 
-- Node.js 16+ and npm
-- Python 3.8+ and pip
+- Node.js 18+ and npm
 - Google Gemini API key
+- (Optional) Upstash Redis credentials for advanced features like Sharing & Rate Limiting
 
-### Frontend Setup
+### Setup
+
+1. **Clone & Install**
+```bash
+git clone <repository_url>
+cd codalyzer
+npm install
+```
+
+2. **Configure Environment**
+
+Copy the example environment into a local override file:
+```bash
+cp .env.example .env.local
+```
+Fill out the variables in `.env.local`:
+- `API_KEY` (Your Google Gemini Key)
+- `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN` (For ephemeral storage)
+
+3. **Run Development Server**
 
 ```bash
-cd frontend
-npm install
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:3000`
-
-### Backend Setup
-
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your GEMINI_API_KEY
-
-python server.py
-```
-
-The backend API will be available at `http://localhost:8080`
+The application will be available at `http://localhost:3000`
 
 ## Configuration
 
-### Backend Environment Variables
+### Environment Variables
 
-| Variable | Default | Description |
+| Variable | Required? | Description |
 |----------|---------|-------------|
-| `GEMINI_API_KEY` | - | Google Gemini API key (required) |
-| `HOST` | 0.0.0.0 | Server host address |
-| `PORT` | 8080 | Server port number |
-| `DEBUG` | false | Enable debug mode |
-| `LOG_LEVEL` | INFO | Logging verbosity level |
-| `GEMINI_MODEL` | gemini-2.5-flash-lite | AI model identifier |
-| `MAX_TOKENS` | 4096 | Maximum response tokens |
-| `TEMPERATURE` | 0.3 | Model creativity parameter |
-
-### Frontend Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VITE_API_URL` | http://localhost:8080 | Backend API base URL |
+| `API_KEY` | Yes | Google Gemini API key |
+| `UPSTASH_REDIS_REST_URL` | No | Upstash Redis connection URL |
+| `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis secret token |
+| `GEMINI_MODEL` | No | Override default Gemini model |
 
 ## Usage
-
-### Basic Analysis
 
 1. **Create or Upload Code**: Start with a new snippet or upload existing files
 2. **Select Language**: Choose from supported programming languages or use auto-detection
 3. **Run Analysis**: Click the "Analyse" button to process your code
 4. **Review Results**: Examine complexity metrics, performance charts, and optimization suggestions
-5. **Export Report**: Generate PDF reports for documentation or sharing
+5. **Share/Export**: Share snippet persistently or Export PDF reports.
 
-### Advanced Features
+## API Reference (Next.js Edge)
 
-#### Performance Visualization
-- Interactive charts showing operations vs input size
-- Separate visualizations for time and space complexity
-- Mathematical precision with 2x scaling progression
+The application provides backend logic natively through Next.js Route Handlers (`app/api/v1/`).
 
-#### Code Quality Assessment
-- Automated detection of performance bottlenecks
-- Memory usage optimization recommendations
-- Security and best practice suggestions
+- **`POST /api/v1/analyze`** - Analyze code complexity and return detailed metrics. Expected payload: `{ code, filename, language }`
+- **`GET /api/v1/health`** - Check API health and model availability.
+- **`GET /api/v1/initialize`** - Fetches initial environment variables/configurations available to UI.
+- **`POST /api/v1/share`** - Create a short-lived shareable code snippet link (requires Redis).
+- **`GET /api/v1/share/[id]`** - Retrieve a shared code snippet.
 
-#### Smart File Management
-- Automatic language detection based on syntax
-- Intelligent filename suggestions for untitled snippets
-- Support for multiple file formats and extensions
+## Development & Build Process
 
-## API Reference
-
-### POST /analyze
-
-Analyze code complexity and return detailed metrics.
-
-**Request Body:**
-```json
-{
-  "code": "function example(arr) { return arr.sort(); }",
-  "filename": "example.js",
-  "language": "JavaScript"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "result": {
-    "fileName": "example.js",
-    "language": "JavaScript",
-    "timestamp": "Feb 02, 10:30 AM",
-    "timeComplexity": {
-      "best": {
-        "notation": "O(n log n)",
-        "description": "Optimized merge sort implementation",
-        "rating": "Good"
-      },
-      "average": {
-        "notation": "O(n log n)",
-        "description": "Standard comparison-based sorting",
-        "rating": "Good"
-      },
-      "worst": {
-        "notation": "O(n log n)",
-        "description": "Worst-case merge sort performance",
-        "rating": "Good"
-      }
-    },
-    "spaceComplexity": {
-      "notation": "O(n)",
-      "description": "Additional memory for merge operations",
-      "rating": "Fair"
-    },
-    "issues": [],
-    "summary": "Efficient sorting implementation with optimal time complexity"
-  }
-}
-```
-
-### GET /health
-
-Check API health and model availability.
-
-### GET /
-
-Get API information and status.
-
-## Development
-
-### Project Structure
-
-```
-codalyzer/
-├── frontend/                 # React TypeScript application
-│   ├── components/          # UI components
-│   │   ├── EditorView.tsx   # Code editor interface
-│   │   └── DashboardView.tsx # Analysis results display
-│   ├── services/            # API integration
-│   │   └── geminiService.ts # Backend communication
-│   └── types.ts            # TypeScript definitions
-├── backend/                 # Python FastAPI server
-│   ├── app/                 # Application modules
-│   │   ├── main.py         # FastAPI routes
-│   │   ├── gemini_provider.py # AI model integration
-│   │   ├── models.py       # Pydantic schemas
-│   │   └── config.py       # Settings management
-│   └── server.py           # Application entry point
-└── README.md               # Project documentation
-```
-
-### Build Process
-
-**Frontend Production Build:**
+**Production Build:**
 ```bash
-cd frontend
 npm run build
 ```
 
-**Backend Testing:**
+**Starting Production Server:**
 ```bash
-cd backend
-python test_analysis.py
+npm run start
 ```
 
 ## Contributing
@@ -221,12 +115,8 @@ We welcome contributions to improve Codalyzer. Please ensure all submissions fol
 2. Include comprehensive documentation for new features
 3. Ensure backward compatibility with existing APIs
 4. Add appropriate error handling and validation
-5. Follow the established TypeScript and Python conventions
+5. Follow the established TypeScript conventions
 
 ## License
 
 This project is available under the MIT License. See LICENSE file for details.
-
-## Support
-
-For technical support or feature requests, please create an issue in the project repository with detailed information about your requirements or encountered problems.

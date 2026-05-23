@@ -1,43 +1,21 @@
-# Environment variables
+node_modules
+.next
+out
+dist
+build
 .env
-.env.local
-.env.production
-
-# Dependencies
-node_modules/
-venv/
-.venv/
-
-# Build outputs
-dist/
-build/
-*.egg-info/
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Logs
+.env.*
 *.log
-logs/
-
-# OS files
 .DS_Store
-Thumbs.db
-
-# Python cache
+.vercel
+next-env.d.ts
+!.env.example
+.claude
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Temporary files
-*.tmp
-*.temp
-
-# API keys and secrets (backup protection)
-**/GEMINI_API_KEY*
-**/API_KEY*
-**/*secret*
-**/*key*.txt
+venv/
+.venv/
+env/
+.pytest_cache/
